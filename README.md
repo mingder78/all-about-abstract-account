@@ -1,13 +1,52 @@
-# Astro with Tailwind
+# test
+
+* client
 
 ```sh
-bun create astro@latest -- --template with-tailwindcss
+curl -X POST http://localhost:4321/api/submit --data '{  "username": "test",  "password": "password"}'
+{"success":true}
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/with-tailwindcss)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/with-tailwindcss)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/with-tailwindcss/devcontainer.json)
+* server
 
-Astro comes with [Tailwind](https://tailwindcss.com) support out of the box. This example showcases how to style your Astro project with Tailwind.
+```sh
+bun dev
+$ astro dev
+22:32:44 [types] Generated 7ms
+22:32:44 [content] Syncing content
+22:32:44 [content] Synced content
 
-For complete setup instructions, please see our [Tailwind Integration Guide](https://docs.astro.build/en/guides/integrations-guide/tailwind).
+ astro  v5.8.0 ready in 1062 ms
+
+┃ Local    http://localhost:4321/
+┃ Network  use --host to expose
+
+22:32:44 watching for file changes...
+Request {
+  method: 'POST',
+  url: 'http://localhost:4321/api/submit',
+# test
+  headers: Headers {
+    host: 'localhost:4321',
+    'user-agent': 'curl/8.1.2',
+    accept: '*/*',
+    'content-length': '47',
+    'content-type': 'application/x-www-form-urlencoded'
+  },
+  destination: '',
+  referrer: 'about:client',
+  referrerPolicy: '',
+  mode: 'cors',
+  credentials: 'same-origin',
+  cache: 'default',
+  redirect: 'follow',
+  integrity: '',
+  keepalive: false,
+  isReloadNavigation: false,
+  isHistoryNavigation: false,
+  signal: AbortSignal { aborted: false }
+}
+Received: { username: 'test', password: 'password' }
+22:32:46 [200] POST /api/submit 25ms
+```
+
