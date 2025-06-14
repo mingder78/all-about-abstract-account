@@ -1,25 +1,238 @@
 ---
-import '../styles/global.css';
-// Component Imports
-import Button from '../components/Button.astro';
-
-// Full Astro Component Syntax:
-// https://docs.astro.build/basics/astro-components/
+// استدعاء ملف الستايلات
+import "../styles/global.css";
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro + TailwindCSS</title>
-	</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebAuthn Wallet Tester</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+    <h1 class="text-2xl font-bold mb-8">WebAuthn Wallet Tester 🔒</h1>
 
-	<body>
-		<div class="grid place-items-center h-screen content-center">
-			<Button>Tailwind Button in Astro!</Button>
-			<a href="/markdown-page" class="p-4 underline">Markdown is also supported...</a>
-		</div>
-	</body>
+    <div class="flex flex-col space-y-4 w-full max-w-md">
+      <input
+        id="emailInput"
+        type="email"
+        placeholder="Enter your email"
+        class="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      />
+      <button
+        id="registerButton"
+        class="px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-600"
+      >
+        Register (Create Passkey)
+      </button>
+      <button
+        id="loginButton"
+        class="px-6 py-3 bg-green-500 text-white rounded hover:bg-green-600"
+      >
+        Login (Sign In)
+      </button>
+    </div>
+
+    <script type="module">
+      function stringToUint8Array(str) {
+        return new Uint8Array(str.split('').map(char => char.charCodeAt(0)));
+      }
+      // Helper function to convert ArrayBuffer to base64
+      function arrayBufferToBase64(buffer) {
+        return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+      }
+
+      // Helper function to convert base64 to Uint8Array
+      function base64ToUint8Array(base64) {
+        return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+      }
+
+      // Register with WebAuthn
+      async function registerPasskey() {
+        const email = document.getElementById("emailInput").value;
+        if (!email) {
+          alert("❌ Please enter an email address!");
+          return;
+        }
+
+        try {
+          console.log("🔵 Starting Registration...");
+
+          // Step 1: Call /register/options
+          const optionsResponse = await fetch('https://awesome-azimuth.vercel.app/register/options', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+          });
+
+          if (!optionsResponse.ok) {
+            throw new Error(`HTTP error! Status: ${optionsResponse.status}`);
+          }
+
+          const options = await optionsResponse.json();
+          console.log(options)
+
+          // Step 2: Convert challenge and user ID for WebAuthn
+          //options.challenge = base64ToUint8Array(options.challenge);
+          //options.user.id = base64ToUint8Array(options.user.id);
+          options.challenge = stringToUint8Array(options.challenge); 
+          options.user.id = stringToUint8Array(options.user.id);
+          options.authenticatorSelection.residentKey = "discouraged";
+          
+          // Step 3: Create credential
+          const credential = await navigator.credentials.create({
+            publicKey: options,
+          });
+
+          console.log(credential)
+
+          // Step 4: Prepare data for /register/verify
+          const verifyPayload = {
+            email,
+            response: {
+              id: credential.id,
+              rawId: arrayBufferToBase64(credential.rawId),
+              response: {
+                clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
+                attestationObject: arrayBufferToBase64(credential.response.attestationObject),
+              },
+              type: credential.type,
+              transports: credential.response.getTransports?.() || [],
+            },
+          };
+
+          console.log(verifyPayload)
+
+          // Step 5: Call /register/verify
+          const verifyResponse = await fetch('https://awesome-azimuth.vercel.app/register/verify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(verifyPayload),
+          });
+
+          if (!verifyResponse.ok) {
+            throw new Error(`HTTP error! Status: ${verifyResponse.status}`);
+          }
+
+          const { verified, token } = await verifyResponse.json();
+          if (verified) {
+            localStorage.setItem('token', token);
+            console.log("✅ Registered Credential:", credential);
+            alert("✅ Registration successful!");
+          } else {
+            throw new Error('Verification failed');
+          }
+        } catch (error) {
+          console.error("❌ Registration error:", error.message);
+          alert(`❌ Registration failed: ${error.message}`);
+        }
+      }
+
+      // Login with WebAuthn
+      async function loginPasskey() {
+        const email = document.getElementById("emailInput").value;
+        if (!email) {
+          alert("❌ Please enter an email address!");
+          return;
+        }
+
+        try {
+          console.log("🟢 Starting Login...");
+
+          // Step 1: Call /login/options
+          const optionsResponse = await fetch('https://awesome-azimuth.vercel.app/login/options', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+          });
+
+          if (!optionsResponse.ok) {
+            throw new Error(`HTTP error! Status: ${optionsResponse.status}`);
+          }
+
+          const options = await optionsResponse.json();
+
+          // Step 2: Convert challenge and allowCredentials IDs
+          options.challenge = base64ToUint8Array(options.challenge);
+          options.allowCredentials = options.allowCredentials.map((cred) => ({
+            ...cred,
+            id: base64ToUint8Array(cred.id),
+          }));
+
+          // Step 3: Get credential
+          const assertion = await navigator.credentials.get({
+            publicKey: options,
+          });
+
+          // Step 4: Prepare data for /login/verify
+          const verifyPayload = {
+            email,
+            response: {
+              id: assertion.id,
+              rawId: arrayBufferToBase64(assertion.rawId),
+              response: {
+                clientDataJSON: arrayBufferToBase64(assertion.response.clientDataJSON),
+                authenticatorData: arrayBufferToBase64(assertion.response.authenticatorData),
+                signature: arrayBufferToBase64(assertion.response.signature),
+                userHandle: assertion.response.userHandle
+                  ? arrayBufferToBase64(assertion.response.userHandle)
+                  : null,
+              },
+              type: assertion.type,
+            },
+          };
+
+          // Step 5: Call /login/verify
+          const verifyResponse = await fetch('https://awesome-azimuth.vercel.app/login/verify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(verifyPayload),
+          });
+
+          if (!verifyResponse.ok) {
+            throw new Error(`HTTP error! Status: ${verifyResponse.status}`);
+          }
+
+          const { verified, token } = await verifyResponse.json();
+          if (verified) {
+            localStorage.setItem('token', token);
+            console.log("✅ Assertion (Login) Successful:", assertion);
+
+            // Extract data for smart contract (if needed)
+            const authenticatorData = new Uint8Array(assertion.response.authenticatorData);
+            const clientDataJSON = new TextDecoder().decode(assertion.response.clientDataJSON);
+            const signature = new Uint8Array(assertion.response.signature);
+
+            console.log("🔹 Authenticator Data:", authenticatorData);
+            console.log("🔹 Client Data JSON:", clientDataJSON);
+            console.log("🔹 Signature:", signature);
+
+            alert("✅ Login successful! Check console for details.");
+          } else {
+            throw new Error('Verification failed');
+          }
+        } catch (error) {
+          console.error("❌ Login error:", error.message);
+          alert(`❌ Login failed: ${error.message}`);
+        }
+      }
+
+      // Attach event listeners
+      document.getElementById("registerButton").addEventListener("click", registerPasskey);
+      document.getElementById("loginButton").addEventListener("click", loginPasskey);
+    </script>
+  </body>
 </html>
