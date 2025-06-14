@@ -1,0 +1,14 @@
+{
+  "id": "mig_d15v3n16jscbgrs6gd2g",
+  "parentID": "mig_d15rfa96jscbgrs6gbqg",
+  "checksum": "1:b146a0238c221f86696c8f5a5df6e50f57bf4926f82d1939288d136b562e86f3",
+  "operations": [
+    {
+      "renameColumn": {
+        "newName": "challenge",
+        "oldName": "credential_id",
+        "table": "users"
+      }
+    }
+  ]
+}

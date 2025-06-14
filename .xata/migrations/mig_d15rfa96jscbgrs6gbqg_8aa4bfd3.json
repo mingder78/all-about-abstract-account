@@ -1,0 +1,167 @@
+{
+  "id": "mig_d15rfa96jscbgrs6gbqg",
+  "checksum": "1:8aa4bfd38c43cd04d19b25dd353e2782d109e2f69497d038b8d84326c1b74bb9",
+  "operations": [
+    {
+      "addTable": {
+        "table": "credentials"
+      }
+    },
+    {
+      "addTable": {
+        "table": "users"
+      }
+    },
+    {
+      "addTable": {
+        "table": "items"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "credentialID",
+          "type": "string",
+          "unique": true
+        },
+        "table": "credentials"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "publicKey",
+          "type": "text"
+        },
+        "table": "credentials"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "counter",
+          "type": "int"
+        },
+        "table": "credentials"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "userId",
+          "type": "link",
+          "link": {
+            "table": "users"
+          }
+        },
+        "table": "credentials"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "transports",
+          "type": "json"
+        },
+        "table": "credentials"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "username",
+          "type": "string",
+          "unique": true
+        },
+        "table": "users"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "password",
+          "type": "string"
+        },
+        "table": "users"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "email",
+          "type": "email",
+          "unique": true
+        },
+        "table": "users"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "public_key",
+          "type": "text",
+          "defaultValue": "\"\""
+        },
+        "table": "users"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "credential_id",
+          "type": "text",
+          "defaultValue": "\"\""
+        },
+        "table": "users"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "userHandle",
+          "type": "string"
+        },
+        "table": "users"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "name",
+          "type": "string"
+        },
+        "table": "items"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "description",
+          "type": "text"
+        },
+        "table": "items"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "user",
+          "type": "link",
+          "link": {
+            "table": "users"
+          }
+        },
+        "table": "items"
+      }
+    },
+    {
+      "addColumn": {
+        "column": {
+          "name": "created_at",
+          "type": "datetime"
+        },
+        "table": "items"
+      }
+    }
+  ]
+}
