@@ -1,0 +1,21 @@
+{
+  "headers": [
+    {
+      "source": "/register/options",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*" // Or specify allowed origins, e.g., "https://your-app.com"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
+  ]
+}
