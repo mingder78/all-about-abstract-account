@@ -41,6 +41,8 @@ const LoginSchema = t.Object({
   password: t.String()
 });
 
+const EmailSchema = t.Object({ email: t.String({ format: 'email' }) });
+
 const app = new Elysia()
   .use(swagger())
   .use(cors())
@@ -69,7 +71,7 @@ const app = new Elysia()
 
       return challenge;
     },
-    { body: t.Object({ email: t.String({ format: 'email' }) }) }
+    { body: EmailSchema }
   )
   // Registration: Verify response
   .post(

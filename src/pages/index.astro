@@ -64,7 +64,7 @@ import "../styles/global.css";
           console.log("🔵 Starting Registration...");
 
           // Step 1: Call /register/options
-          const optionsResponse = await fetch('https://awesome-azimuth.vercel.app/register/options', {
+          const optionsResponse = await fetch('/register/options', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -111,7 +111,7 @@ import "../styles/global.css";
           console.log(verifyPayload)
 
           // Step 5: Call /register/verify
-          const verifyResponse = await fetch('https://awesome-azimuth.vercel.app/register/verify', {
+          const verifyResponse = await fetch('/register/verify', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ import "../styles/global.css";
           console.log("🟢 Starting Login...");
 
           // Step 1: Call /login/options
-          const optionsResponse = await fetch('https://awesome-azimuth.vercel.app/login/options', {
+          const optionsResponse = await fetch('/login/options', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ import "../styles/global.css";
           };
 
           // Step 5: Call /login/verify
-          const verifyResponse = await fetch('https://awesome-azimuth.vercel.app/login/verify', {
+          const verifyResponse = await fetch('/login/verify', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
