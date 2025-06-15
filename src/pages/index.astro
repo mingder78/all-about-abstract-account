@@ -39,18 +39,16 @@ import "../styles/global.css";
     </div>
 
     <script type="module">
-      function stringToUint8Array(str) {
-        return new Uint8Array(str.split('').map(char => char.charCodeAt(0)));
-      }
-      // Helper function to convert ArrayBuffer to base64
-      function arrayBufferToBase64(buffer) {
-        return btoa(String.fromCharCode(...new Uint8Array(buffer)));
-      }
+function arrayBufferToBase64url(buffer) {
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
 
-      // Helper function to convert base64 to Uint8Array
-      function base64ToUint8Array(base64) {
-        return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-      }
+function base64urlToUint8Array(base64url) {
+  const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((base64url.length + 3) % 4);
+  const binary = atob(base64);
+  return Uint8Array.from(binary, c => c.charCodeAt(0));
+}
 
       // Register with WebAuthn
       async function registerPasskey() {
@@ -80,11 +78,8 @@ import "../styles/global.css";
           console.log(options)
 
           // Step 2: Convert challenge and user ID for WebAuthn
-          //options.challenge = base64ToUint8Array(options.challenge);
-          //options.user.id = base64ToUint8Array(options.user.id);
-          options.challenge = stringToUint8Array(options.challenge); 
-          options.user.id = stringToUint8Array(options.user.id);
-          options.authenticatorSelection.residentKey = "discouraged";
+          options.challenge = base64urlToUint8Array(options.challenge);
+          options.user.id = base64urlToUint8Array(options.user.id);
           
           // Step 3: Create credential
           const credential = await navigator.credentials.create({
@@ -98,10 +93,10 @@ import "../styles/global.css";
             email,
             response: {
               id: credential.id,
-              rawId: arrayBufferToBase64(credential.rawId),
+              rawId: arrayBufferToBase64url(credential.rawId),
               response: {
-                clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
-                attestationObject: arrayBufferToBase64(credential.response.attestationObject),
+                clientDataJSON: arrayBufferToBase64url(credential.response.clientDataJSON),
+                attestationObject: arrayBufferToBase64url(credential.response.attestationObject),
               },
               type: credential.type,
               transports: credential.response.getTransports?.() || [],
@@ -122,7 +117,7 @@ import "../styles/global.css";
           if (!verifyResponse.ok) {
             throw new Error(`HTTP error! Status: ${verifyResponse.status}`);
           }
-
+console.log(verifyResponse)
           const { verified, token } = await verifyResponse.json();
           if (verified) {
             localStorage.setItem('token', token);
@@ -133,7 +128,7 @@ import "../styles/global.css";
           }
         } catch (error) {
           console.error("❌ Registration error:", error.message);
-          alert(`❌ Registration failed: ${error.message}`);
+          alert(`❌❌ Registration failed: ${error.message}`);
         }
       }
 
@@ -156,43 +151,43 @@ import "../styles/global.css";
             },
             body: JSON.stringify({ email }),
           });
-
+console.log(optionsResponse)
           if (!optionsResponse.ok) {
             throw new Error(`HTTP error! Status: ${optionsResponse.status}`);
           }
 
           const options = await optionsResponse.json();
-
+console.log(options)
           // Step 2: Convert challenge and allowCredentials IDs
-          options.challenge = base64ToUint8Array(options.challenge);
+          options.challenge = base64urlToUint8Array(options.challenge);
           options.allowCredentials = options.allowCredentials.map((cred) => ({
             ...cred,
-            id: base64ToUint8Array(cred.id),
+            id: base64urlToUint8Array(cred.id),
           }));
 
           // Step 3: Get credential
           const assertion = await navigator.credentials.get({
             publicKey: options,
           });
-
+console.log(assertion)
           // Step 4: Prepare data for /login/verify
           const verifyPayload = {
             email,
             response: {
               id: assertion.id,
-              rawId: arrayBufferToBase64(assertion.rawId),
+              rawId: arrayBufferToBase64url(assertion.rawId),
               response: {
-                clientDataJSON: arrayBufferToBase64(assertion.response.clientDataJSON),
-                authenticatorData: arrayBufferToBase64(assertion.response.authenticatorData),
-                signature: arrayBufferToBase64(assertion.response.signature),
+                clientDataJSON: arrayBufferToBase64url(assertion.response.clientDataJSON),
+                authenticatorData: arrayBufferToBase64url(assertion.response.authenticatorData),
+                signature: arrayBufferToBase64url(assertion.response.signature),
                 userHandle: assertion.response.userHandle
-                  ? arrayBufferToBase64(assertion.response.userHandle)
+                  ? arrayBufferToBase64url(assertion.response.userHandle)
                   : null,
               },
               type: assertion.type,
             },
           };
-
+console.log(verifyPayload)
           // Step 5: Call /login/verify
           const verifyResponse = await fetch('/login/verify', {
             method: 'POST',
@@ -201,7 +196,7 @@ import "../styles/global.css";
             },
             body: JSON.stringify(verifyPayload),
           });
-
+console.log(verifyResponse)
           if (!verifyResponse.ok) {
             throw new Error(`HTTP error! Status: ${verifyResponse.status}`);
           }
