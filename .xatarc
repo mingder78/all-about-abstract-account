@@ -1,6 +1,7 @@
 {
   "databaseURL": "https://Ming-der-Wang-s-workspace-o0c6p5.ap-southeast-2.xata.sh/db/ai-coding-curd-astro-swagger-sqlite",
   "codegen": {
-    "output": "src/xata.ts"
+    "output": "src/xata.ts",
+    "useEnvironmentVariables": true
   }
 }

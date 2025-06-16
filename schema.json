@@ -52,7 +52,7 @@
           "defaultValue": "\"\""
         },
         {
-          "name": "credential_id",
+          "name": "challenge",
           "type": "text",
           "defaultValue": "\"\""
         },
@@ -62,6 +62,10 @@
         }
       ],
       "revLinks": [
+        {
+          "column": "userId",
+          "table": "credentials"
+        },
         {
           "column": "user",
           "table": "items"
