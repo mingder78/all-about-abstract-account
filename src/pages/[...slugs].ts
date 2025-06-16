@@ -10,6 +10,7 @@ import {
   verifyAuthenticationResponse,
   type VerifiedRegistrationResponse,
   type VerifyRegistrationResponseOpts,
+  type VerifyAuthenticationResponseOpts,
   type WebAuthnCredential,
 } from '@simplewebauthn/server';
 import { isoUint8Array } from '@simplewebauthn/server/helpers';
@@ -222,21 +223,33 @@ console.log('ming')
       }
 
       const credentialFromDB: WebAuthnCredential = {
-  id: Buffer.from(credential.credentialID, 'base64url'),
-  publicKey: Buffer.from(credential.publicKey, 'base64url'),
-  counter: credential.counter,
+  id: credential.credentialID || "",
+  publicKey: Buffer.from((credential.publicKey || ""), 'base64url'),
+  counter: credential.counter || 0,
   transports: credential.transports, // optional
 };
-
-      const verification = await verifyAuthenticationResponse({
-        response,
-        expectedChallenge: user.challenge,
-        expectedOrigin: ORIGIN,
-        expectedRPID: RP_ID,
-        credential: credentialFromDB,
-      });
+console.log(credentialFromDB)
+const expectedChallenge = user.challenge;
+ const opts: VerifyAuthenticationResponseOpts = {
+      response,
+      expectedChallenge: `${expectedChallenge}`,
+      expectedOrigin: ORIGIN,
+      expectedRPID: RP_ID,
+      credential: credentialFromDB,
+      requireUserVerification: false,
+    };
+console.log(opts)
+try {
+      const verification = await verifyAuthenticationResponse(opts);
       console.log(verification)
-
+      } catch (error) {
+        const _error = error as Error;
+        console.error(_error);
+        return new Response(null, {
+          status: 515,
+          statusText: _error.message
+        });
+      }
       if (verification.verified) {
         await xata.db.credentials.update(credential.id, {
           counter: verification.authenticationInfo.newCounter,
