@@ -80,6 +80,18 @@ function safeBase64Decode(base64String: string) {
   }
 }
 
+function base64urlToUint8Array(base64url: string): Uint8Array {
+  // Pad string & replace base64url chars
+  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/')
+    + '==='.slice((base64url.length + 3) % 4); // padding fix
+  const binary = atob(base64);
+  const uint8 = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    uint8[i] = binary.charCodeAt(i);
+  }
+  return uint8;
+}
+
 
 const app = new Elysia()
   .use(swagger())
@@ -213,9 +225,15 @@ console.log(options)
 
       // Ensure rawId is a Buffer
       const rawIdBuffer = Buffer.from(response.rawId, response.rawId instanceof ArrayBuffer ? 'base64' : undefined);
-      const credential = await xata.db.credentials
+      const credentialTmp = await xata.db.credentials
         .filter({ credentialID: base64url.encode(rawIdBuffer) })
         .getFirst();
+        const newPublicKey = Uint8Array.from((credentialTmp?.publicKey || "").split(',').map(Number));
+
+const credential = {
+  ...credentialTmp,
+  publicKey: newPublicKey
+};
 console.log(credential)
 console.log('ming')
       if (!credential) {
@@ -224,11 +242,11 @@ console.log('ming')
 
       const credentialFromDB: WebAuthnCredential = {
   id: credential.credentialID || "",
-  publicKey: Buffer.from((credential.publicKey || ""), 'base64url'),
+  publicKey: credential.publicKey,
   counter: credential.counter || 0,
   transports: credential.transports, // optional
 };
-console.log(credentialFromDB)
+
 const expectedChallenge = user.challenge;
  const opts: VerifyAuthenticationResponseOpts = {
       response,
