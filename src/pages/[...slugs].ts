@@ -130,11 +130,11 @@ const app = new Elysia()
   // Registration: Verify response
   .post(
     '/register/verify',
-    async ({ body: { email, response }, jwt}) => {
+    async ({ body: { email, response }, jwt }) => {
       console.log(response)
-        const clientDataJSON = Buffer.from(response.response.clientDataJSON, 'base64').toString('utf-8');
-        console.log(clientDataJSON)
-      const clientData = JSON.parse(clientDataJSON); 
+      const clientDataJSON = Buffer.from(response.response.clientDataJSON, 'base64').toString('utf-8');
+      console.log(clientDataJSON)
+      const clientData = JSON.parse(clientDataJSON);
       console.log(clientData)
       const user = await xata.db.users.filter({ email }).getFirst();
       if (!user || !user.challenge) {
@@ -205,7 +205,7 @@ const app = new Elysia()
           transports: cred.transports || [],
         })),
       });
-console.log(options)
+      console.log(options)
       // Store challenge
       await xata.db.users.update(user.id, { challenge: options.challenge });
 
@@ -228,38 +228,48 @@ console.log(options)
       const credentialTmp = await xata.db.credentials
         .filter({ credentialID: base64url.encode(rawIdBuffer) })
         .getFirst();
-        const newPublicKey = Uint8Array.from((credentialTmp?.publicKey || "").split(',').map(Number));
+      const newPublicKey = Uint8Array.from((credentialTmp?.publicKey || "").split(',').map(Number));
 
-const credential = {
-  ...credentialTmp,
-  publicKey: newPublicKey
-};
-console.log(credential)
-console.log('ming')
+      const credential = {
+        ...credentialTmp,
+        publicKey: newPublicKey
+      };
+      console.log(credential)
+      console.log('ming')
       if (!credential) {
         throw new Error('Credential not found');
       }
 
       const credentialFromDB: WebAuthnCredential = {
-  id: credential.credentialID || "",
-  publicKey: credential.publicKey,
-  counter: credential.counter || 0,
-  transports: credential.transports, // optional
-};
+        id: credential.credentialID || "",
+        publicKey: credential.publicKey,
+        counter: credential.counter || 0,
+        transports: credential.transports, // optional
+      };
 
-const expectedChallenge = user.challenge;
- const opts: VerifyAuthenticationResponseOpts = {
-      response,
-      expectedChallenge: `${expectedChallenge}`,
-      expectedOrigin: ORIGIN,
-      expectedRPID: RP_ID,
-      credential: credentialFromDB,
-      requireUserVerification: false,
-    };
-console.log(opts)
-try {
-      const verification = await verifyAuthenticationResponse(opts);
-      console.log(verification)
+      const expectedChallenge = user.challenge;
+      const opts: VerifyAuthenticationResponseOpts = {
+        response,
+        expectedChallenge: `${expectedChallenge}`,
+        expectedOrigin: ORIGIN,
+        expectedRPID: RP_ID,
+        credential: credentialFromDB,
+        requireUserVerification: false,
+      };
+      console.log(opts)
+      try {
+        const verification = await verifyAuthenticationResponse(opts);
+        console.log(verification)
+
+        if (verification.verified) {
+          await xata.db.credentials.update(credential.id, {
+            counter: verification.authenticationInfo.newCounter,
+          });
+
+          await xata.db.users.update(user.id, { challenge: null });
+          const token = await jwt.sign({ userId: user.id, email });
+          return { verified: true, token };
+        }
       } catch (error) {
         const _error = error as Error;
         console.error(_error);
@@ -268,16 +278,6 @@ try {
           statusText: _error.message
         });
       }
-      if (verification.verified) {
-        await xata.db.credentials.update(credential.id, {
-          counter: verification.authenticationInfo.newCounter,
-        });
-
-        await xata.db.users.update(user.id, { challenge: null });
-        const token = await jwt.sign({ userId: user.id, email });
-        return { verified: true, token };
-      }
-
       throw new Error('Authentication failed');
     },
     {
