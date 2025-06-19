@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { swagger } from "@elysiajs/swagger";
 import { cors } from '@elysiajs/cors';
 import { jwt } from '@elysiajs/jwt';
-import { getXataClient, type DatabaseSchema } from "../xata";
+import { getXataClient, type DatabaseSchema } from "../../../backend/xata";
 import {
   generateRegistrationOptions,
   verifyRegistrationResponse,
